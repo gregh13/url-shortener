@@ -5,4 +5,8 @@ app = FastAPI()
 
 @app.get("/")
 async def root():
-    return {"message": "Just the beginning!"}
+    message = '''
+              Welcome to the URL Shortener Application, the free and easy way to shorten long and unseemly URLs. 
+              Use a custom short URL or let us randomly generate one.
+              '''
+    return {"message": message}
