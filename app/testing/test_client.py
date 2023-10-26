@@ -1,17 +1,18 @@
 from fastapi.testclient import TestClient
-
+from app.main import app
 
 client = TestClient(app)
+
 
 def test_api():
     res_home = client.get("/")
 
-    res_no_params = client.post(url="/shorten_url", json={})
+    res_no_params = client.post(url="/api/shorten_url", json={})
 
-    res_params1 = client.post(url="/shorten_url",
+    res_params1 = client.post(url="/api/shorten_url",
                               json={"original_url": "http://www.original.com"})
 
-    res_params2 = client.post(url="/shorten_url",
+    res_params2 = client.post(url="/api/shorten_url",
                               json={"original_url": "http://www.original.com",
                                     "custom_url": "thegoods"})
 

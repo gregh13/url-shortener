@@ -1,24 +1,15 @@
 from app.models.pydantic_models import PostURL, GetURL
 from app.service.database import talk_to_db, generate_random_url
+from fastapi import APIRouter
 from fastapi.responses import RedirectResponse
 
 
 SHORT_URL_LENGTH = 8
 
-app = None
+router = APIRouter(prefix="/api", tags=["url_actions"])
 
 
-
-@app.get("/")
-async def root():
-    message = '''
-              Welcome to the URL Shortener Application, the free and easy way to shorten long and unseemly URLs. 
-              Use a custom short URL or let us randomly generate one.
-              '''
-    return {"message": message}
-
-
-@app.post("/shorten_url")
+@router.post("/shorten_url")
 async def shorten_url(record: PostURL):
     if record.custom_url:
         # Custom url provided, proceed with posting to DB
@@ -38,7 +29,7 @@ async def shorten_url(record: PostURL):
     return db_response["message"]
 
 
-@app.get("/list_urls")
+@router.get("/list_urls")
 async def list_urls():
     db_response = talk_to_db("get_all")
     if db_response["status_code"] != 200:
@@ -47,7 +38,7 @@ async def list_urls():
         return db_response["payload"]
 
 
-@app.get("/redirect")
+@router.get("/redirect")
 async def redirect(record: GetURL):
     db_response = talk_to_db("get_one", record.short_url)
     if db_response["status_code"] != 200:
