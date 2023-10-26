@@ -1,8 +1,9 @@
 from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from fastapi.responses import RedirectResponse
+
 from pydantic import BaseModel
 from uuid import uuid4
-
-from fastapi.testclient import TestClient
 
 
 class Record(BaseModel):
@@ -18,8 +19,7 @@ client = TestClient(app)
 
 def talk_to_db(type: str, foo = None, bar = None):
     # placeholder function
-    return
-
+    return {"status_code": 200, "message": None, "payload": None}
 
 
 @app.get("/")
@@ -44,19 +44,27 @@ async def shorten_url(record: Record):
             random_short_url = random_full_url
             # random_short_url = str(random_full_url)[:SHORT_URL_LENGTH]
             db_response = talk_to_db("post", random_short_url, record.original_url)
-            if not db_response:
+            if db_response["status_code"] == 200:
                 # placeholder if statement
                 break
 
-    return db_response
+    return db_response["message"]
 
 
 @app.get("/list_urls")
 async def list_urls():
     db_response = talk_to_db("get_all")
-    return db_response
+    return db_response["payload"]
 
 
+@app.get("/redirect")
+async def redirect(record: Record):
+    db_response = talk_to_db("get_one", record.original_url)
+
+
+
+
+# --------------------------------------------------------------------------------------------- #
 def test_api():
     res_home = client.get("/")
     res_no_params = client.post(url="/shorten_url", json={})
