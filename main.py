@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from uuid import uuid4
 
+from fastapi.testclient import TestClient
+
 
 class Record(BaseModel):
     original_url: str
@@ -11,12 +13,12 @@ class Record(BaseModel):
 SHORT_URL_LENGTH = 8
 
 app = FastAPI()
+client = TestClient(app)
 
 
 def post_to_db(foo = None, bar = None):
     # placeholder function
     return
-
 
 @app.get("/")
 async def root():
@@ -45,3 +47,19 @@ async def shorten_url(record: Record):
                 break
 
     return db_response
+
+
+
+def test_api():
+    res_home = client.get("/")
+    res_no_params = client.post(url="/shorten_url", json={})
+    res_params1 = client.post(url="/shorten_url", json={"original_url": "http://www.original.com"})
+    res_params2 = client.post(url="/shorten_url", json={"original": "http://www.original.com", "custom": "thegoods"})
+    res_params3 = client.post(url="/shorten_url", json={"original": "http://www.original.com", "test": "thegoods"})
+
+    results = [res_home, res_no_params, res_params1, res_params2, res_params3]
+    for r in results:
+        print(r.json())
+
+
+test_api()
