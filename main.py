@@ -19,7 +19,11 @@ client = TestClient(app)
 
 def talk_to_db(type: str, foo = None, bar = None):
     # placeholder function
-    return {"status_code": 200, "message": None, "payload": None}
+    return {
+        "status_code": 200,
+        "message": "Some message",
+        "payload": "https://www.google.com"
+            }
 
 
 @app.get("/")
@@ -54,12 +58,20 @@ async def shorten_url(record: Record):
 @app.get("/list_urls")
 async def list_urls():
     db_response = talk_to_db("get_all")
-    return db_response["payload"]
+    if db_response["status_code"] != 200:
+        return db_response["message"]
+    else:
+        return db_response["payload"]
 
 
 @app.get("/redirect")
 async def redirect(record: Record):
     db_response = talk_to_db("get_one", record.original_url)
+    if db_response["status_code"] != 200:
+        return db_response["message"]
+    else:
+        url_to_go_to = db_response["payload"]
+        return RedirectResponse(url=url_to_go_to, status_code=303)
 
 
 
