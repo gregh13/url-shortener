@@ -6,9 +6,13 @@ from pydantic import BaseModel
 from uuid import uuid4
 
 
-class Record(BaseModel):
+class PostURL(BaseModel):
     original_url: str
     custom_url: str | None = None
+
+
+class GetURL(BaseModel):
+    short_url: str
 
 
 SHORT_URL_LENGTH = 8
@@ -36,7 +40,7 @@ async def root():
 
 
 @app.post("/shorten_url")
-async def shorten_url(record: Record):
+async def shorten_url(record: PostURL):
     if record.custom_url:
         # Custom url provided, proceed with posting to DB
         db_response = talk_to_db("post", record.custom_url, record.original_url)
@@ -65,15 +69,13 @@ async def list_urls():
 
 
 @app.get("/redirect")
-async def redirect(record: Record):
-    db_response = talk_to_db("get_one", record.original_url)
+async def redirect(record: GetURL):
+    db_response = talk_to_db("get_one", record.short_url)
     if db_response["status_code"] != 200:
         return db_response["message"]
     else:
         url_to_go_to = db_response["payload"]
         return RedirectResponse(url=url_to_go_to, status_code=303)
-
-
 
 
 # --------------------------------------------------------------------------------------------- #
