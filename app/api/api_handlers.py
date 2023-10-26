@@ -1,33 +1,12 @@
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from app.models.pydantic_models import PostURL, GetURL
+from app.service.database import talk_to_db, generate_random_url
 from fastapi.responses import RedirectResponse
-
-from pydantic import BaseModel
-from uuid import uuid4
-
-
-class PostURL(BaseModel):
-    original_url: str
-    custom_url: str | None = None
-
-
-class GetURL(BaseModel):
-    short_url: str
 
 
 SHORT_URL_LENGTH = 8
 
-app = FastAPI()
-client = TestClient(app)
+app = None
 
-
-def talk_to_db(type: str, foo = None, bar = None):
-    # placeholder function
-    return {
-        "status_code": 200,
-        "message": "Some message",
-        "payload": "https://www.google.com"
-            }
 
 
 @app.get("/")
@@ -48,7 +27,7 @@ async def shorten_url(record: PostURL):
     else:
         # No custom url provided, need to generate random short url
         while True:
-            random_full_url = uuid4()
+            random_full_url = generate_random_url()
             random_short_url = random_full_url
             # random_short_url = str(random_full_url)[:SHORT_URL_LENGTH]
             db_response = talk_to_db("post", random_short_url, record.original_url)
@@ -76,24 +55,3 @@ async def redirect(record: GetURL):
     else:
         url_to_go_to = db_response["payload"]
         return RedirectResponse(url=url_to_go_to, status_code=303)
-
-
-# --------------------------------------------------------------------------------------------- #
-def test_api():
-    res_home = client.get("/")
-
-    res_no_params = client.post(url="/shorten_url", json={})
-
-    res_params1 = client.post(url="/shorten_url",
-                              json={"original_url": "http://www.original.com"})
-
-    res_params2 = client.post(url="/shorten_url",
-                              json={"original_url": "http://www.original.com",
-                                    "custom_url": "thegoods"})
-
-    results = [res_home, res_no_params, res_params1, res_params2]
-    for r in results:
-        print(r.json())
-
-
-test_api()
