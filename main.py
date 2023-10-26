@@ -10,3 +10,8 @@ async def root():
               Use a custom short URL or let us randomly generate one.
               '''
     return {"message": message}
+
+
+@app.post("/shorten_url")
+async def shorten_url():
+    pass
