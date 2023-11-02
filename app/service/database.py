@@ -53,3 +53,22 @@ def add_random_url_to_db(original_url):
 
     # Max attempts reached, failed to add url to DB
     return 409
+
+
+def get_all_urls():
+    # Initialize payload
+    payload = {"all_urls": []}
+
+    # Get all urls in DB
+    all_url_items = Thread.scan()
+
+    # Add urls to payload
+    for url_item in all_url_items:
+        url = {
+            "short_url": url_item.short_url,
+            "original_url": url_item.original_url
+            }
+
+        payload["all_urls"].append(url)
+
+    return payload
