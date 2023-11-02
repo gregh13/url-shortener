@@ -21,6 +21,10 @@ def add_url_to_db(short_url, original_url):
         # Condition failed, Short Url already exists in DB
         return 409
 
+    except PynamoDBConnectionError:
+        # DB server unreachable
+        return 500
+
     else:
         # Short Url was successfully added to DB
         return 201
