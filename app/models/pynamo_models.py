@@ -16,20 +16,3 @@ class Thread(Model):
 
     short_url = UnicodeAttribute(hash_key=True, attr_name="ShortUrl")
     original_url = UnicodeAttribute(attr_name="OriginalUrl")
-
-# # Item creation, already done
-# new_item = Thread(short_url='ex_short', original_url="ex_reallllly_looonnngg")
-# new_item.save()
-
-check_item_in_db = Thread.get("ex_short")
-print(f"Item pulled from local database: \n"
-      f"Short Url: {check_item_in_db.short_url}\n"
-      f"Original Url: {check_item_in_db.original_url}\n")
-
-
-try:
-    fake_url = "my_fake_url"
-    check_fake_item = Thread.get(fake_url)
-    print(check_fake_item)
-except Thread.DoesNotExist:
-    print(f"'{fake_url}' does not exist in database")
