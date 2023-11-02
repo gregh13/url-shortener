@@ -26,6 +26,10 @@ def add_url_to_db(short_url, original_url):
         return 201
 
 
+def add_custom_url_to_db(custom_url, original_url):
+    return add_url_to_db(short_url=custom_url, original_url=original_url)
+
+
 def add_random_url_to_db(original_url):
     # Initialize attempts to create and add random url to DB
     attempts = 1
