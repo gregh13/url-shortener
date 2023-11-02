@@ -26,15 +26,6 @@ def add_item_to_db(short_url, original_url):
         return 201
 
 
-def talk_to_db(type: str, foo = None, bar = None):
-    # placeholder function
-    return {
-        "status_code": 200,
-        "message": "Some message",
-        "payload": "https://www.google.com"
-            }
-
-
 def generate_valid_random_url(original_url):
     # Initialize attempts to create and add random url to DB
     attempts = 1
