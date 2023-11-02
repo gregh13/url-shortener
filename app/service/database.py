@@ -6,7 +6,7 @@ SHORT_URL_LENGTH = 8
 MAX_RANDOM_URL_ATTEMPTS = 50
 
 
-def add_item_to_db(short_url, original_url):
+def add_url_to_db(short_url, original_url):
     # Create key:value pair to add to DB
     new_item = Thread(short_url=short_url, original_url=original_url)
 
@@ -26,7 +26,7 @@ def add_item_to_db(short_url, original_url):
         return 201
 
 
-def generate_valid_random_url(original_url):
+def add_random_url_to_db(original_url):
     # Initialize attempts to create and add random url to DB
     attempts = 1
 
@@ -38,7 +38,7 @@ def generate_valid_random_url(original_url):
         random_short_url = str(random_full_url)[:SHORT_URL_LENGTH]
 
         # Try to add url to DB
-        response = add_item_to_db(short_url=random_short_url, original_url=original_url)
+        response = add_url_to_db(short_url=random_short_url, original_url=original_url)
 
         # Check if url was successfully added to DB
         if response == 201:
