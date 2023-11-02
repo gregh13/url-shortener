@@ -3,6 +3,9 @@ from app.service.database import add_custom_url_to_db, add_random_url_to_db, get
 from fastapi import APIRouter
 from fastapi.responses import RedirectResponse
 
+# Temporary return messages
+SUCCESS_MESSAGE = "Process successful!"
+ERROR_MESSAGE = "Sorry, we could not process your request"
 
 router = APIRouter(prefix="/api", tags=["url_actions"])
 
@@ -17,14 +20,18 @@ async def shorten_url(record: PostURL):
         # No custom url provided, attempt to add randomly generated short url to DB
         db_response = add_random_url_to_db(original_url=record.original_url)
 
-    return db_response
+    if db_response == 201:
+        return SUCCESS_MESSAGE
+
+    else:
+        return ERROR_MESSAGE
 
 
 @router.get("/list_urls")
 async def list_urls():
     db_response = get_all_urls()
     if db_response["status_code"] != 200:
-        return
+        return ERROR_MESSAGE
 
     else:
         # Request to DB was successful, return
