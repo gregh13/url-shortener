@@ -1,10 +1,8 @@
 from app.models.pydantic_models import PostURL, GetURL
-from app.service.database import talk_to_db, generate_random_url
+from app.service.database import add_url_to_db, add_custom_url_to_db, add_random_url_to_db
 from fastapi import APIRouter
 from fastapi.responses import RedirectResponse
 
-
-SHORT_URL_LENGTH = 8
 
 router = APIRouter(prefix="/api", tags=["url_actions"])
 
@@ -12,21 +10,14 @@ router = APIRouter(prefix="/api", tags=["url_actions"])
 @router.post("/shorten_url")
 async def shorten_url(record: PostURL):
     if record.custom_url:
-        # Custom url provided, proceed with posting to DB
-        db_response = talk_to_db("post", record.custom_url, record.original_url)
+        # Custom url provided, attempt to add custom url to DB
+        db_response = add_custom_url_to_db(custom_url=record.custom_url, original_url=record.original_url)
 
     else:
-        # No custom url provided, need to generate random short url
-        while True:
-            random_full_url = generate_random_url()
-            random_short_url = random_full_url
-            # random_short_url = str(random_full_url)[:SHORT_URL_LENGTH]
-            db_response = talk_to_db("post", random_short_url, record.original_url)
-            if db_response["status_code"] == 200:
-                # placeholder if statement
-                break
+        # No custom url provided, attempt to add randomly generated short url to DB
+        db_response = add_random_url_to_db(original_url=record.original_url)
 
-    return db_response["message"]
+    return db_response
 
 
 @router.get("/list_urls")
