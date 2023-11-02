@@ -40,16 +40,12 @@ def generate_valid_random_url(original_url):
         # Try to add url to DB
         response = add_item_to_db(short_url=random_short_url, original_url=original_url)
 
-        # Break while loop once url has been successfully added to DB
+        # Check if url was successfully added to DB
         if response == 201:
-            break
+            return 201
 
         # Increment attempts and try again with a new random url
         attempts += 1
 
-    else:
-        # Block only triggers after too many failed attempts
-        return
-
-    # This is only reachable when random url is successfully added to DB
-    return
+    # Max attempts reached, failed to add url to DB
+    return 409
