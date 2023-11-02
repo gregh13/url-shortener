@@ -1,5 +1,5 @@
 from app.models.pynamo_models import Thread
-from pynamodb.exceptions import PutError
+from pynamodb.exceptions import PutError, PynamoDBConnectionError
 from uuid import uuid4
 
 SHORT_URL_LENGTH = 8
@@ -56,19 +56,31 @@ def add_random_url_to_db(original_url):
 
 
 def get_all_urls():
-    # Initialize payload
-    payload = {"all_urls": []}
+    # Initialize response
+    response = {
+        "status": None,
+        "payload": []
+    }
 
-    # Get all urls in DB
-    all_url_items = Thread.scan()
+    try:
+        # Get all urls in DB
+        all_url_items = Thread.scan()
 
-    # Add urls to payload
-    for url_item in all_url_items:
-        url = {
-            "short_url": url_item.short_url,
-            "original_url": url_item.original_url
+    except PynamoDBConnectionError:
+        # Update response code
+        response["status"] = 500
+
+    else:
+        # Update response code
+        response["status"] = 200
+
+        # Add urls to payload
+        for url_item in all_url_items:
+            url = {
+                "short_url": url_item.short_url,
+                "original_url": url_item.original_url
             }
 
-        payload["all_urls"].append(url)
+            response["payload"].append(url)
 
-    return payload
+    return response
