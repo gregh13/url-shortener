@@ -62,7 +62,7 @@ def add_random_url_to_db(original_url):
 def get_all_urls():
     # Initialize response
     response = {
-        "status": None,
+        "status_code": None,
         "payload": []
     }
 
@@ -72,11 +72,11 @@ def get_all_urls():
 
     except PynamoDBConnectionError:
         # Update response code
-        response["status"] = 500
+        response["status_code"] = 500
 
     else:
         # Update response code
-        response["status"] = 200
+        response["status_code"] = 200
 
         # Add urls to payload
         for url_item in all_url_items:
