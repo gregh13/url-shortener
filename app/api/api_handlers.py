@@ -1,5 +1,5 @@
 from app.models.pydantic_models import PostURL, GetURL
-from app.service.database import add_url_to_db, add_custom_url_to_db, add_random_url_to_db
+from app.service.database import add_custom_url_to_db, add_random_url_to_db, get_all_urls
 from fastapi import APIRouter
 from fastapi.responses import RedirectResponse
 
@@ -22,10 +22,12 @@ async def shorten_url(record: PostURL):
 
 @router.get("/list_urls")
 async def list_urls():
-    db_response = talk_to_db("get_all")
+    db_response = get_all_urls()
     if db_response["status_code"] != 200:
-        return db_response["message"]
+        return
+
     else:
+        # Request to DB was successful, return
         return db_response["payload"]
 
 
