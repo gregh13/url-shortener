@@ -1,5 +1,5 @@
 from app.models.pydantic_models import PostURL, GetURL
-from app.service.database import add_custom_url_to_db, add_random_url_to_db, get_all_urls
+from app.service.database import add_custom_url_to_db, add_random_url_to_db, get_all_urls, get_one_url
 from fastapi import APIRouter
 from fastapi.responses import RedirectResponse
 
@@ -41,9 +41,12 @@ async def list_urls():
 
 @router.get("/redirect")
 async def redirect(record: GetURL):
-    db_response = talk_to_db("get_one", record.short_url)
-    if db_response["status_code"] != 200:
-        return db_response["message"]
-    else:
+    # Check DB for short_url key
+    db_response = get_one_url(record.short_url)
+
+    if db_response["status_code"] == 200:
         url_to_go_to = db_response["payload"]
         return RedirectResponse(url=url_to_go_to, status_code=303)
+
+    else:
+        return ERROR_MESSAGE
