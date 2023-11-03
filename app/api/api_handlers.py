@@ -30,12 +30,13 @@ async def shorten_url(record: PostURL):
 @router.get("/list_urls")
 async def list_urls():
     db_response = get_all_urls()
-    if db_response["status_code"] != 200:
-        return ERROR_MESSAGE
-
-    else:
+    if db_response["status_code"] == 200:
         # Request to DB was successful, return
         return db_response["payload"]
+
+    else:
+        # Bad response, DB not reachable
+        return ERROR_MESSAGE
 
 
 @router.get("/redirect")
