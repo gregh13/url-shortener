@@ -1,4 +1,4 @@
-from app.models.pydantic_models import PostURL, GetURL
+from app.models.pydantic_models import PostURL
 from app.service.database import add_custom_url_to_db, add_random_url_to_db, get_all_urls, get_one_url
 from fastapi import APIRouter
 from fastapi.responses import RedirectResponse
@@ -24,7 +24,7 @@ async def shorten_url(record: PostURL):
         return SUCCESS_MESSAGE
 
     else:
-        return ERROR_MESSAGE
+        return f"{ERROR_MESSAGE} --> status code: {db_response}"
 
 
 @router.get("/list_urls")
@@ -36,13 +36,13 @@ async def list_urls():
 
     else:
         # Bad response, DB not reachable
-        return ERROR_MESSAGE
+        return f"{ERROR_MESSAGE} --> status code: {db_response}"
 
 
 @router.get("/redirect/{short_url}")
 async def redirect(short_url: str):
     if not short_url:
-        return ERROR_MESSAGE
+        return f"{ERROR_MESSAGE} --> status code: 400"
 
     # Check DB for short_url key
     db_response = get_one_url(short_url)
@@ -52,4 +52,4 @@ async def redirect(short_url: str):
         return RedirectResponse(url=url_to_go_to, status_code=303)
 
     else:
-        return ERROR_MESSAGE
+        return f"{ERROR_MESSAGE} --> status code: {db_response}"
