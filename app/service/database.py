@@ -1,5 +1,5 @@
 from app.models.pynamo_models import Thread
-from pynamodb.exceptions import DoesNotExist, PutError, PynamoDBConnectionError
+from pynamodb.exceptions import DoesNotExist, GetError, PutError, PynamoDBConnectionError
 from uuid import uuid4
 
 SHORT_URL_LENGTH = 8
@@ -101,16 +101,20 @@ def get_one_url(short_url):
         # Get url key pair in DB
         url_item = Thread.get(short_url)
 
-    except DoesNotExist:
-        # Url not in DB
-        response["status_code"] = 404
-
     except PynamoDBConnectionError:
-        # Update response code for unreachable server
+        # Internal Server Error, unreachable server
         response["status_code"] = 500
 
+    except GetError:
+        # Bad request, issue with getting item from DB
+        response["status_code"] = 400
+
+    except DoesNotExist:
+        # Not Found, Url not in DB
+        response["status_code"] = 404
+
     else:
-        # Update response code for successful retrieval
+        # Success, url retrieved
         response["status_code"] = 200
 
         # Add url to payload
