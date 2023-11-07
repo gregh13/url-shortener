@@ -2,7 +2,7 @@ import unittest
 from app.service.database import get_one_url
 
 
-class GetOneUrl(unittest.TestCase):
+class TestGetOneUrl(unittest.TestCase):
     def test_database_reachable(self):
         response = get_one_url("test")
         self.assertNotEqual(response["status_code"], 500)
