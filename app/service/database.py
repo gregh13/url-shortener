@@ -101,16 +101,19 @@ def get_one_url(short_url):
         # Get url key pair in DB
         url_item = Thread.get(short_url)
 
+    except TypeError:
+        # Bad request, issue with getting item from DB
+        response["payload"] = "TypeError"
+        response["status_code"] = 400
+
     except PynamoDBConnectionError:
         # Internal Server Error, unreachable server
+        response["payload"] = "DBConnectionError"
         response["status_code"] = 500
-
-    except GetError:
-        # Bad request, issue with getting item from DB
-        response["status_code"] = 400
 
     except DoesNotExist:
         # Not Found, Url not in DB
+        response["payload"] = "DoesNotExist"
         response["status_code"] = 404
 
     else:
