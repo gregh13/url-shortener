@@ -5,7 +5,7 @@ from app.service.database import get_one_url
 class GetOneUrl(unittest.TestCase):
     def test_database_reachable(self):
         response = get_one_url("test")
-        self.assertNotEquals(response["status_code"], 500)
+        self.assertNotEqual(response["status_code"], 500)
 
     def test_url_does_not_exist(self):
         response = get_one_url("nonexistant")
@@ -18,11 +18,17 @@ class GetOneUrl(unittest.TestCase):
         # self.assertEqual(response["payload"], "https://www.exisiting_url.com")
 
     def test_bad_url_inputs(self):
-        all_bad_input = [set(), {}, {1}, {"url": "test"}, "*(#&$)(&@(#", 3.1415, ["testurl"], (1), True, False, None]
+        bad_inputs_1 = [{}, {"url": "test"}, ["testurl"], ("url", "test"), None]
+        bad_inputs_2 = [set(), {1}, {"url"}]
+        bad_inputs_3 = [True, False, ")(#$*(&&&*", 3.1415]
+        all_bad_inputs = [(500, bad_inputs_1), (400, bad_inputs_2), (404, bad_inputs_3)]
 
-        for bad_input in all_bad_input:
-            response = get_one_url(bad_input)
-            self.assertEqual(response, 400)
+        for error_code, bad_input_list in all_bad_inputs:
+            for bad_input in bad_input_list:
+                response = get_one_url(bad_input)
+                self.assertEqual(error_code,
+                                 response["status_code"],
+                                 msg=f"{bad_input} --> {response["status_code"]}, {response["payload"]}")
 
 
 if __name__ == '__main__':
