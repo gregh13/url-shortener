@@ -39,10 +39,13 @@ async def list_urls():
         return ERROR_MESSAGE
 
 
-@router.get("/redirect")
-async def redirect(record: GetURL):
+@router.get("/redirect/{short_url}")
+async def redirect(short_url: str):
+    if not short_url:
+        return ERROR_MESSAGE
+
     # Check DB for short_url key
-    db_response = get_one_url(record.short_url)
+    db_response = get_one_url(short_url)
 
     if db_response["status_code"] == 200:
         url_to_go_to = db_response["payload"]

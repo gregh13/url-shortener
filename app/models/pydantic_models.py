@@ -6,5 +6,5 @@ class PostURL(BaseModel):
     custom_url: str | None = None
 
 
-class GetURL(BaseModel):
-    short_url: str
+# class GetURL(BaseModel):
+#     short_url: str
