@@ -1,5 +1,5 @@
 from app.models.pynamo_models import Thread
-from pynamodb.exceptions import DeleteError, DoesNotExist, PutError, PynamoDBConnectionError
+from pynamodb.exceptions import AttributeNullError, DeleteError, DoesNotExist, PutError, PynamoDBConnectionError
 from uuid import uuid4
 
 SHORT_URL_LENGTH = 8
@@ -22,6 +22,16 @@ def add_url_to_db(short_url, original_url):
 
         # Attempt to add item to DB
         new_item.save(condition=condition)
+
+    except AttributeNullError:
+        # Bad request, short_url is Null
+        response["payload"] = "AttributeNullError"
+        response["status_code"] = 400
+
+    except TypeError:
+        # Bad request, short_url is invalid
+        response["payload"] = "TypeError"
+        response["status_code"] = 400
 
     except PutError:
         # Condition failed, Short Url already exists in DB
