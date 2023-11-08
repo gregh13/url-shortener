@@ -10,7 +10,7 @@ def add_url_to_db(short_url, original_url):
     # Initialize response
     response = {
         "status_code": None,
-        "payload": []
+        "payload": ''
     }
 
     # Create key:value pair to add to DB
@@ -46,6 +46,12 @@ def add_custom_url_to_db(custom_url, original_url):
 
 
 def add_random_url_to_db(original_url):
+    # Initialize response
+    response = {
+        "status_code": None,
+        "payload": ''
+    }
+
     # Initialize attempts to create and add random url to DB
     attempts = 1
 
@@ -60,14 +66,14 @@ def add_random_url_to_db(original_url):
         response = add_url_to_db(short_url=random_short_url, original_url=original_url)
 
         # Check if url was successfully added to DB
-        if response == 201:
-            return 201
+        if response["status_code"] == 200:
+            return response
 
         # Increment attempts and try again with a new random url
         attempts += 1
 
     # Max attempts reached, failed to add url to DB
-    return 409
+    return response
 
 
 def get_all_urls():
