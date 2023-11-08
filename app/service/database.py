@@ -25,15 +25,20 @@ def add_url_to_db(short_url, original_url):
 
     except PutError:
         # Condition failed, Short Url already exists in DB
-        return 409
+        response["payload"] = "PutError"
+        response["status_code"] = 409
 
     except PynamoDBConnectionError:
-        # DB server unreachable
-        return 500
+        # Internal Server Error, unreachable server
+        response["payload"] = "DBConnectionError"
+        response["status_code"] = 500
 
     else:
-        # Short Url was successfully added to DB
-        return 201
+        # Success, short Url was successfully added to DB
+        response["payload"] = "Success"
+        response["status_code"] = 200
+
+    return response
 
 
 def add_custom_url_to_db(custom_url, original_url):
