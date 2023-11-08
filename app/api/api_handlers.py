@@ -48,8 +48,9 @@ async def redirect(short_url: str):
     db_response = get_one_url(short_url)
 
     if db_response["status_code"] == 200:
-        url_to_go_to = db_response["payload"]
-        return RedirectResponse(url=url_to_go_to, status_code=303)
+        url_item = db_response["payload"]
+        if url_item and type(url_item) != str:
+            url_to_go_to = url_item.original_url
+            return RedirectResponse(url=url_to_go_to, status_code=303)
 
-    else:
-        return f"{ERROR_MESSAGE} --> status code: {db_response}"
+    return f"{ERROR_MESSAGE} --> status code: {db_response}"
