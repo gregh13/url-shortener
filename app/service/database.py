@@ -1,5 +1,5 @@
 from app.models.pynamo_models import Thread
-from pynamodb.exceptions import DoesNotExist, GetError, PutError, PynamoDBConnectionError
+from pynamodb.exceptions import DeleteError, DoesNotExist, PutError, PynamoDBConnectionError
 from uuid import uuid4
 
 SHORT_URL_LENGTH = 8
@@ -77,8 +77,32 @@ def add_random_url_to_db(original_url):
 
 
 def delete_item(short_url):
-    item_to_delete = Thread.delete(short_url=short_url)
-    return item_to_delete
+    # Initialize response
+    response = {
+        "status_code": None,
+        "payload": []
+    }
+
+    # Need to get actual item in order to delete item
+    response = get_one_url(short_url=short_url)
+
+    if response["status_code"] == 200:
+        # item retrieved, can now try to delete
+        try:
+            item_to_delete = response["payload"]
+            item_to_delete.delete()
+
+        except DeleteError:
+            # Failed to delete
+            response["payload"] = "DeleteError"
+            response["status_code"] = 501
+
+        else:
+            # Success, url deleted
+            response["payload"] = "Successfully Deleted Item"
+            response["status_code"] = 200
+
+    return response
 
 
 def get_all_urls():
@@ -117,7 +141,7 @@ def get_one_url(short_url):
     # Initialize response
     response = {
         "status_code": None,
-        "payload": None
+        "payload": ''
     }
 
     try:
@@ -141,9 +165,7 @@ def get_one_url(short_url):
 
     else:
         # Success, url retrieved
+        response["payload"] = url_item
         response["status_code"] = 200
-
-        # Add url to payload
-        response["payload"] = url_item.original_url
 
     return response
