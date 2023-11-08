@@ -76,6 +76,11 @@ def add_random_url_to_db(original_url):
     return response
 
 
+def delete_item(short_url):
+    item_to_delete = Thread.delete(short_url=short_url)
+    return item_to_delete
+
+
 def get_all_urls():
     # Initialize response
     response = {
