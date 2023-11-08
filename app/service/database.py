@@ -7,6 +7,12 @@ MAX_RANDOM_URL_ATTEMPTS = 50
 
 
 def add_url_to_db(short_url, original_url):
+    # Initialize response
+    response = {
+        "status_code": None,
+        "payload": []
+    }
+
     # Create key:value pair to add to DB
     new_item = Thread(short_url=short_url, original_url=original_url)
 
@@ -71,11 +77,12 @@ def get_all_urls():
         all_url_items = Thread.scan()
 
     except PynamoDBConnectionError:
-        # Update response code
+        # Internal Server Error, unreachable server
+        response["payload"] = "DBConnectionError"
         response["status_code"] = 500
 
     else:
-        # Update response code
+        # Success, all urls retrieved
         response["status_code"] = 200
 
         # Add urls to payload
