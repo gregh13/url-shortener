@@ -1,6 +1,5 @@
 import unittest
-import uuid
-from app.service.database import add_random_url_to_db, delete_item
+from app.service.database import add_random_url_to_db
 
 
 class TestAddRandomUrl(unittest.TestCase):
