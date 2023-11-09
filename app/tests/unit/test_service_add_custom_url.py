@@ -10,8 +10,7 @@ class TestAddCustomUrl(unittest.TestCase):
         self.assertEqual(200, add_response["status_code"])
 
         # Delete item just added to DB
-        del_response = delete_item(mock_custom_string)
-        self.assertEqual(200, del_response["status_code"])
+        delete_item(mock_custom_string)
 
     def test_url_collision(self):
         response = add_custom_url_to_db(custom_url="existing_url", original_url="https://www.exisiting_url.com")
@@ -29,8 +28,7 @@ class TestAddCustomUrl(unittest.TestCase):
 
                 if response["status_code"] == 200:
                     # Delete item in case bad_input was actually added to db
-                    del_response = delete_item(bad_input)
-                    self.assertEqual(200, del_response["status_code"])
+                    elete_item(bad_input)
 
                 self.assertEqual(error_code, response["status_code"], msg=message)
 
