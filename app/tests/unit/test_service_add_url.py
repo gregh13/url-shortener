@@ -35,6 +35,5 @@ class TestAddUrl(unittest.TestCase):
                 self.assertEqual(error_code, response["status_code"], msg=message)
 
 
-
 if __name__ == '__main__':
     unittest.main()
