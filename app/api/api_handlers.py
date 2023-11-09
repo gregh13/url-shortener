@@ -14,29 +14,25 @@ router = APIRouter(prefix="/api", tags=["url_actions"])
 async def shorten_url(record: PostURL):
     if record.custom_url:
         # Custom url provided, attempt to add custom url to DB
-        db_response = add_custom_url_to_db(custom_url=record.custom_url, original_url=record.original_url)
+        response = add_custom_url_to_db(custom_url=record.custom_url, original_url=record.original_url)
 
     else:
         # No custom url provided, attempt to add randomly generated short url to DB
-        db_response = add_random_url_to_db(original_url=record.original_url)
+        response = add_random_url_to_db(original_url=record.original_url)
 
-    if db_response == 201:
-        return SUCCESS_MESSAGE
-
-    else:
-        return f"{ERROR_MESSAGE} --> status code: {db_response}"
+    return f"{response["status_code"]}: {response["payload"]}"
 
 
 @router.get("/list_urls")
 async def list_urls():
-    db_response = get_all_urls()
-    if db_response["status_code"] == 200:
+    response = get_all_urls()
+    if response["status_code"] == 200:
         # Request to DB was successful, return
-        return db_response["payload"]
+        return response["payload"]
 
     else:
         # Bad response, DB not reachable
-        return f"{ERROR_MESSAGE} --> status code: {db_response}"
+        return f"{ERROR_MESSAGE} --> status code: {response["status_code"]}"
 
 
 @router.get("/redirect/{short_url}")
@@ -45,12 +41,12 @@ async def redirect(short_url: str):
         return f"{ERROR_MESSAGE} --> status code: 400"
 
     # Check DB for short_url key
-    db_response = get_one_url(short_url)
+    response = get_one_url(short_url)
 
-    if db_response["status_code"] == 200:
-        url_item = db_response["payload"]
+    if response["status_code"] == 200:
+        url_item = response["payload"]
         if url_item and type(url_item) != str:
             url_to_go_to = url_item.original_url
             return RedirectResponse(url=url_to_go_to, status_code=303)
 
-    return f"{ERROR_MESSAGE} --> status code: {db_response}"
+    return f"{ERROR_MESSAGE} --> status code: {response}"
