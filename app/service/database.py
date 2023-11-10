@@ -138,6 +138,7 @@ def get_all_urls():
         # Add urls to payload
         for url_item in all_url_items:
             url = {
+                "url_item": url_item,
                 "short_url": url_item.short_url,
                 "original_url": url_item.original_url
             }
@@ -179,3 +180,12 @@ def get_one_url(short_url):
         response["status_code"] = 200
 
     return response
+
+
+def reset_db():
+    response = get_all_urls()
+
+    if response["status_code"] == 200:
+        for url in response["payload"]:
+            short_url = url["short_url"]
+
