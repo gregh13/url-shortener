@@ -22,7 +22,7 @@ class TestShortenUrlAPI(unittest.TestCase):
 
     def test_custom_url_with_collision(self):
         custom_url = "existing_url"
-        response = client.post(url="/api/shorten_url", json={"custom_url": custom_url, "original_url": "https://www.existing.com"})
+        response = client.post(url="/api/shorten_url", json={"custom_url": custom_url, "original_url": "https://www.google.com"})
         self.assertEqual(409, response.json()["status_code"])
 
 
