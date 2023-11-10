@@ -138,7 +138,6 @@ def get_all_urls():
         # Add urls to payload
         for url_item in all_url_items:
             url = {
-                "url_item": url_item,
                 "short_url": url_item.short_url,
                 "original_url": url_item.original_url
             }
@@ -186,6 +185,12 @@ def reset_db():
     response = get_all_urls()
 
     if response["status_code"] == 200:
+        # Remove all entries from DB
         for url in response["payload"]:
             short_url = url["short_url"]
+            delete_item(short_url)
 
+        # Repopulate with exisiting url
+        add_custom_url_to_db(custom_url="existing_url", original_url="https://www.google.com")
+
+    return response
