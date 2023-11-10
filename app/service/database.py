@@ -9,6 +9,7 @@ MAX_RANDOM_URL_ATTEMPTS = 50
 def add_url_to_db(short_url, original_url):
     # Initialize response
     response = {
+        "short_url": None,
         "status_code": None,
         "payload": ''
     }
@@ -45,6 +46,7 @@ def add_url_to_db(short_url, original_url):
 
     else:
         # Success, short Url was successfully added to DB
+        response["short_url"] = short_url
         response["payload"] = "Success"
         response["status_code"] = 200
 
@@ -58,6 +60,7 @@ def add_custom_url_to_db(custom_url, original_url):
 def add_random_url_to_db(original_url):
     # Initialize response
     response = {
+        "short_url": None,
         "status_code": None,
         "payload": ''
     }
@@ -87,12 +90,6 @@ def add_random_url_to_db(original_url):
 
 
 def delete_item(short_url):
-    # Initialize response
-    response = {
-        "status_code": None,
-        "payload": []
-    }
-
     # Need to get actual item in order to delete item
     response = get_one_url(short_url=short_url)
 
@@ -118,8 +115,9 @@ def delete_item(short_url):
 def get_all_urls():
     # Initialize response
     response = {
+        "short_url": None,
         "status_code": None,
-        "payload": []
+        "payload": ''
     }
 
     try:
@@ -134,6 +132,9 @@ def get_all_urls():
     else:
         # Success, all urls retrieved
         response["status_code"] = 200
+
+        # Initialize payload format
+        response["payload"] = []
 
         # Add urls to payload
         for url_item in all_url_items:
@@ -150,6 +151,7 @@ def get_all_urls():
 def get_one_url(short_url):
     # Initialize response
     response = {
+        "short_url": None,
         "status_code": None,
         "payload": ''
     }
@@ -176,6 +178,7 @@ def get_one_url(short_url):
     else:
         # Success, url retrieved
         response["payload"] = url_item
+        response["short_url"] = url_item.short_url
         response["status_code"] = 200
 
     return response
@@ -190,7 +193,7 @@ def reset_db():
             short_url = url["short_url"]
             delete_item(short_url)
 
-        # Repopulate with exisiting url
+        # Repopulate with existing url
         add_custom_url_to_db(custom_url="existing_url", original_url="https://www.google.com")
 
     return response
