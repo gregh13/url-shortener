@@ -20,7 +20,7 @@ async def shorten_url(record: PostURL):
         # No custom url provided, attempt to add randomly generated short url to DB
         response = add_random_url_to_db(original_url=record.original_url)
 
-    return f"{response["status_code"]}: {response["payload"]}"
+    return response
 
 
 @router.get("/list_urls")
