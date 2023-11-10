@@ -28,9 +28,6 @@ class TestShortenUrlAPI(unittest.TestCase):
         response_code = int(response.json()[:3])
         self.assertEqual(409, response_code)
 
-        # Delete item just added to DB
-        delete_item(custom_url)
-
 
 if __name__ == '__main__':
     unittest.main()
