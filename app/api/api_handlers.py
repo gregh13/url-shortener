@@ -26,19 +26,13 @@ async def shorten_url(record: PostURL):
 @router.get("/list_urls")
 async def list_urls():
     response = get_all_urls()
-    if response["status_code"] == 200:
-        # Request to DB was successful, return
-        return response["payload"]
-
-    else:
-        # Bad response, DB not reachable
-        return f"{ERROR_MESSAGE} --> status code: {response["status_code"]}"
+    return response
 
 
 @router.get("/redirect/{short_url}")
 async def redirect(short_url: str):
     if not short_url:
-        return f"{ERROR_MESSAGE} --> status code: 400"
+        return {"status_code": 400, "payload": "Bad Input"}
 
     # Check DB for short_url key
     response = get_one_url(short_url)
@@ -49,4 +43,4 @@ async def redirect(short_url: str):
             url_to_go_to = url_item.original_url
             return RedirectResponse(url=url_to_go_to, status_code=303)
 
-    return f"{ERROR_MESSAGE} --> status code: {response}"
+    return response
