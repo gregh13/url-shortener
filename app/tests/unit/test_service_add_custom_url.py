@@ -28,7 +28,7 @@ class TestAddCustomUrl(unittest.TestCase):
 
                 if response["status_code"] == 200:
                     # Delete item in case bad_input was actually added to db
-                    elete_item(bad_input)
+                    delete_item(bad_input)
 
                 self.assertEqual(error_code, response["status_code"], msg=message)
 
