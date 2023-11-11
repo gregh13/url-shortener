@@ -32,15 +32,19 @@ async def list_urls():
 @router.get("/redirect/{short_url}")
 async def redirect(short_url: str):
     if not short_url:
-        return {"status_code": 400, "payload": "Bad Input"}
+        return {"status_code": 400, "payload": "Bad input: no url provided"}
 
     # Check DB for short_url key
     response = get_one_url(short_url)
 
     if response["status_code"] == 200:
         url_item = response["payload"]
+
+        # Ensure url_item is an item before tapping into its attributes
         if url_item and type(url_item) != str:
             url_to_go_to = url_item.original_url
+
+            # Redirect user to the original url
             return RedirectResponse(url=url_to_go_to, status_code=303)
 
     return response

@@ -10,29 +10,44 @@ class TestRedirectAPI(unittest.TestCase):
         valid_url = "existing_url"
         url = f"/api/redirect/{valid_url}"
         response = client.get(url=url)
-        history = response.history
         self.assertEqual("https://www.google.com", response.url)
         self.assertEqual(200, response.status_code)
+
+        history = response.history
+
+        # Check history has at least one previous page, signalling redirection
         self.assertGreater(len(history), 0)
+
+        # Check redirection status
         self.assertTrue(response.history[0].is_redirect)
 
     def test_non_existing_url_redirect(self):
         invalid_url = "non_existing_url"
         url = f"/api/redirect/{invalid_url}"
         response = client.get(url=url)
-        # get response gives 200 even with invalid url, need to access database response dictionary
+
+        # Only DB knows this is invalid, so need to access database response status code
         response_status_code = response.json()["status_code"]
-        history = response.history
+
+        # Client stores request url as current url when redirect fails
         self.assertEqual("http://testserver/api/redirect/non_existing_url", response.url)
         self.assertEqual(404, response_status_code)
+
+
+        history = response.history
+
+        # Check for empty page history, signalling no redirection occurred
         self.assertEqual(0, len(history))
 
     def test_no_input_redirect(self):
         no_input = ""
         url = f"/api/redirect/{no_input}"
         response = client.get(url=url)
-        history = response.history
         self.assertEqual(404, response.status_code)
+
+        history = response.history
+
+        # Check for empty page history, signalling no redirection occurred
         self.assertEqual(0, len(history))
 
 

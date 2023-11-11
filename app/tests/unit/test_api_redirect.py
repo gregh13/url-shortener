@@ -18,9 +18,11 @@ class TestRedirectAPI(unittest.TestCase):
         invalid_url = "non_existing_url"
         url = f"/api/redirect/{invalid_url}"
         response = client.get(url=url)
-        # get response gives 200 even with invalid url, need to access database response dictionary
+
+        # Only DB knows this is invalid, so need to access database response status code
         response_status_code = response.json()["status_code"]
 
+        # Client stores request url as current url when redirect fails
         self.assertEqual("http://testserver/api/redirect/non_existing_url", response.url)
         self.assertEqual(404, response_status_code)
 
@@ -28,6 +30,8 @@ class TestRedirectAPI(unittest.TestCase):
         no_input = ""
         url = f"/api/redirect/{no_input}"
         response = client.get(url=url)
+
+        # No input results in client response 404
         self.assertEqual(404, response.status_code)
 
 

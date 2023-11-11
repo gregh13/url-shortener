@@ -11,9 +11,11 @@ class TestListUrlsIntegrationAPI(unittest.TestCase):
         response = response_raw.json()
         self.assertEqual(200, response["status_code"])
 
+        # Make sure response has returned a list of urls
         url_list = response["payload"]
         self.assertIsInstance(url_list, list)
 
+        # Make sure list has at least one entry ("existing_url" will always be in the DB for testing)
         self.assertGreater(len(url_list), 0)
 
 

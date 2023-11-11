@@ -86,6 +86,7 @@ def add_random_url_to_db(original_url):
         attempts += 1
 
     # Max attempts reached, failed to add url to DB
+    # Response will have most recent failed response, can return without any update
     return response
 
 
@@ -143,6 +144,7 @@ def get_all_urls():
                 "original_url": url_item.original_url
             }
 
+            # Add url to list
             response["payload"].append(url)
 
     return response
@@ -185,6 +187,7 @@ def get_one_url(short_url):
 
 
 def reset_db():
+    # Get all urls in DB
     response = get_all_urls()
 
     if response["status_code"] == 200:
@@ -194,6 +197,6 @@ def reset_db():
             delete_item(short_url)
 
         # Repopulate with existing url
-        add_custom_url_to_db(custom_url="existing_url", original_url="https://www.google.com")
+        response = add_custom_url_to_db(custom_url="existing_url", original_url="https://www.google.com")
 
     return response
