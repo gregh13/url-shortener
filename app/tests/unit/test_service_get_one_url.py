@@ -15,20 +15,21 @@ class TestGetOneUrl(unittest.TestCase):
         response = get_one_url("existing_url")
         self.assertEqual(200, response["status_code"])
 
-        # self.assertEqual(response["payload"], "https://www.exisiting_url.com")
 
     def test_bad_url_inputs(self):
+        # Initialize bad inputs
         bad_inputs_1 = [{}, {"url": "test"}, ["testurl"], ("url", "test"), None]
         bad_inputs_2 = [set(), {1}, {"url"}]
         bad_inputs_3 = [True, False, ")(#$*(&&&*", 3.1415]
+
+        # Pair input lists with error codes
         all_bad_inputs = [(500, bad_inputs_1), (400, bad_inputs_2), (404, bad_inputs_3)]
 
         for error_code, bad_input_list in all_bad_inputs:
             for bad_input in bad_input_list:
                 response = get_one_url(bad_input)
-                self.assertEqual(error_code,
-                                 response["status_code"],
-                                 msg=f"{bad_input} --> {response["status_code"]}, {response["payload"]}")
+                message = f"{bad_input} --> {response["status_code"]}, {response["payload"]}"
+                self.assertEqual(error_code, response["status_code"], msg=message)
 
 
 if __name__ == '__main__':
