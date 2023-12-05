@@ -7,6 +7,11 @@ MAX_RANDOM_URL_ATTEMPTS = 50
 
 
 def add_url_to_db(short_url, original_url):
+    """
+    Function that attempts to add a new key:value pair (short_url: original_url) to the DynamoDB database via PynamoDB.
+    Response, which includes payload and status_code, is returned to provide client with details of the API call.
+    """
+
     # Initialize response
     response = {
         "short_url": None,
@@ -54,10 +59,19 @@ def add_url_to_db(short_url, original_url):
 
 
 def add_custom_url_to_db(custom_url, original_url):
+    """
+    Function attempts to add a new key:value pair (short_url: original_url) with custom key value.
+    Response, which includes payload and status_code, is returned to provide client with details of the API call.
+    """
+    # Call url adding function with custom_url parameter
     return add_url_to_db(short_url=custom_url, original_url=original_url)
 
 
 def add_random_url_to_db(original_url):
+    """
+    Function attempts to add a new key:value pair (short_url: original_url) using a randomly generated string as key.
+    Response, which includes payload and status_code, is returned to provide client with details of the API call.
+    """
     # Initialize response
     response = {
         "short_url": None,
@@ -68,6 +82,7 @@ def add_random_url_to_db(original_url):
     # Initialize attempts to create and add random url to DB
     attempts = 1
 
+    # Begin process of creating random url string, limit attempts to prevent excessive recursion/timeout
     while attempts < MAX_RANDOM_URL_ATTEMPTS:
         # Generate secure random uuid
         random_full_url = uuid4()
@@ -91,6 +106,10 @@ def add_random_url_to_db(original_url):
 
 
 def delete_item(short_url):
+    """
+    Function attempts to delete an existing key (short_url) in the database.
+    Response, which includes payload and status_code, is returned to provide client with details of the API call.
+    """
     # Need to get actual item in order to delete item
     response = get_one_url(short_url=short_url)
 
@@ -114,6 +133,10 @@ def delete_item(short_url):
 
 
 def get_all_urls():
+    """
+    Function attempts to retrieve all existing key:value pairs (short_url: original_url) in the database.
+    Response, which includes payload and status_code, is returned to provide client with details of the API call.
+    """
     # Initialize response
     response = {
         "short_url": None,
@@ -151,6 +174,10 @@ def get_all_urls():
 
 
 def get_one_url(short_url):
+    """
+    Function attempts to retrieve a specific key:value pair (short_url: original_url) from the database.
+    Response, including payload, status_code, & url_item, is returned to provide client with details of the API call.
+    """
     # Initialize response
     response = {
         "short_url": None,
@@ -187,6 +214,11 @@ def get_one_url(short_url):
 
 
 def reset_db():
+    """
+    Function attempts to remove all key:value pairs in database and reset it to original state.
+    Response, including payload and status_code, is returned to provide client with details of the API call.
+    """
+
     # Get all urls in DB
     response = get_all_urls()
 
