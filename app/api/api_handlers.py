@@ -20,16 +20,24 @@ async def shorten_url(record: PostURL):
         # No custom url provided, attempt to add randomly generated short url to DB
         response = add_random_url_to_db(original_url=record.original_url)
 
-    return ERROR_MESSAGE + f" Error code: {response["status_code"]} - {response["payload"]}"
+    if response["status_code"] == 200:
+        response["message"] = SUCCESS_MESSAGE
+    else:
+        response["message"] = ERROR_MESSAGE + f" Error code: {response["status_code"]} - {response["payload"]}"
+
+    return response
 
 
 @router.get("/list_urls")
 async def list_urls():
     response = get_all_urls()
+
     if response["status_code"] == 200:
-        return response["payload"]
+        response["message"] = SUCCESS_MESSAGE
     else:
-        return ERROR_MESSAGE + f" Error code: {response["status_code"]} - {response["payload"]}"
+        response["message"] = ERROR_MESSAGE + f" Error code: {response["status_code"]} - {response["payload"]}"
+
+    return response
 
 
 @router.get("/redirect/{short_url}")
@@ -41,9 +49,13 @@ async def redirect(short_url: str):
     response = get_one_url(short_url)
 
     if response["status_code"] == 200:
+        response["message"] = SUCCESS_MESSAGE
         url_item = response["payload"]
         if url_item and type(url_item) != str:
             url_to_go_to = url_item.original_url
             return RedirectResponse(url=url_to_go_to, status_code=303)
 
-    return ERROR_MESSAGE + f" Error code: {response["status_code"]} - {response["payload"]}"
+    else:
+        response["message"] = ERROR_MESSAGE + f" Error code: {response["status_code"]} - {response["payload"]}"
+
+    return response
