@@ -1,7 +1,9 @@
 from app.models.pydantic_models import PostURL
 from app.service.database import add_custom_url_to_db, add_random_url_to_db, get_all_urls, get_one_url
-from fastapi import APIRouter
+from fastapi import APIRouter, Path, Body
+from typing import Annotated
 from fastapi.responses import RedirectResponse
+
 
 # Temporary return messages
 SUCCESS_MESSAGE = "Process successful!"
@@ -11,7 +13,7 @@ router = APIRouter(prefix="/api", tags=["url_actions"])
 
 
 @router.post("/shorten_url")
-async def shorten_url(record: PostURL):
+async def shorten_url(record: Annotated[PostURL, Body(title="Pydantic Model for URL")]):
     if record.custom_url:
         # Custom url provided, attempt to add custom url to DB
         response = add_custom_url_to_db(custom_url=record.custom_url, original_url=record.original_url)
@@ -23,7 +25,7 @@ async def shorten_url(record: PostURL):
     if response["status_code"] == 200:
         response["message"] = SUCCESS_MESSAGE
     else:
-        response["message"] = ERROR_MESSAGE + f" Error code: {response["status_code"]} - {response["payload"]}"
+        response["message"] = ERROR_MESSAGE + f" Error code: {response['status_code']} - {response['payload']}"
 
     return response
 
@@ -35,13 +37,13 @@ async def list_urls():
     if response["status_code"] == 200:
         response["message"] = SUCCESS_MESSAGE
     else:
-        response["message"] = ERROR_MESSAGE + f" Error code: {response["status_code"]} - {response["payload"]}"
+        response["message"] = ERROR_MESSAGE + f" Error code: {response['status_code']} - {response['payload']}"
 
     return response
 
 
 @router.get("/redirect/{short_url}")
-async def redirect(short_url: str):
+async def redirect(short_url: Annotated[str, Path(title="Short URL")] = None):
     if not short_url:
         return {"status_code": 400, "payload": "Bad Input"}
 
@@ -56,6 +58,6 @@ async def redirect(short_url: str):
             return RedirectResponse(url=url_to_go_to, status_code=303)
 
     else:
-        response["message"] = ERROR_MESSAGE + f" Error code: {response["status_code"]} - {response["payload"]}"
+        response["message"] = ERROR_MESSAGE + f" Error code: {response['status_code']} - {response['payload']}"
 
     return response
