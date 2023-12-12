@@ -5,7 +5,7 @@ from app.api import api_handlers
 
 app = FastAPI()
 app.include_router(api_handlers.router)
-
+app.include_router(api_handlers.auth_router)
 
 @app.get("/")
 async def root():
