@@ -7,3 +7,14 @@ aws dynamodb --endpoint-url http://localhost:8000 \
         AttributeName=ShortUrl,KeyType=HASH \
     --provisioned-throughput \
         ReadCapacityUnits=10,WriteCapacityUnits=5
+
+
+aws dynamodb --endpoint-url http://localhost:8000 \
+    create-table \
+    --table-name USERS \
+    --attribute-definitions \
+        AttributeName=Username,AttributeType=S \
+    --key-schema \
+        AttributeName=Username,KeyType=HASH \
+    --provisioned-throughput \
+        ReadCapacityUnits=10,WriteCapacityUnits=5
