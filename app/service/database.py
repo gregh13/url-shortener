@@ -2,12 +2,10 @@ from app.models.pynamo_models import Urls, Users
 from app.models.pydantic_models import UserInDB
 from pynamodb.exceptions import AttributeNullError, DeleteError, DoesNotExist, PutError, PynamoDBConnectionError
 from uuid import uuid4
-import bcrypt
 from passlib.context import CryptContext
 
 SHORT_URL_LENGTH = 8
 MAX_RANDOM_URL_ATTEMPTS = 50
-
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -433,12 +431,7 @@ def reset_users():
             username = user["username"]
             delete_user(username)
 
-        print("All users after reset:", get_all_users())
         # Repopulate with admin
         response = create_new_user("gregh13", "123")
 
     return response
-
-#
-# print(get_all_users())
-# print(verify_password("123", "$5$rounds=535000$8kfnMc8qWFuhcolf$SzrAh2Aiy6t6Na9pRwTWmZcRe.g5uCH9i8jPw0rKnbB"))
