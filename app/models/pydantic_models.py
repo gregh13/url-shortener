@@ -7,7 +7,8 @@ class PostURL(BaseModel):
 
 
 class User(BaseModel):
-    email: str
+    username: str
+    url_limit: int | None = 20
     admin: bool | None = False
     disabled: bool | None = False
 
