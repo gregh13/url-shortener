@@ -1,4 +1,4 @@
-from app.models.pynamo_models import Thread
+from app.models.pynamo_models import Urls, Users
 from pynamodb.exceptions import AttributeNullError, DeleteError, DoesNotExist, PutError, PynamoDBConnectionError
 from uuid import uuid4
 
@@ -20,11 +20,11 @@ def add_url_to_db(short_url, original_url):
     }
 
     # Create key:value pair to add to DB
-    new_item = Thread(short_url=short_url, original_url=original_url)
+    new_item = Urls(short_url=short_url, original_url=original_url)
 
     try:
         # Create condition to make sure Short Url isn't already in DB
-        condition = Thread.short_url.does_not_exist()
+        condition = Urls.short_url.does_not_exist()
 
         # Attempt to add item to DB
         new_item.save(condition=condition)
@@ -105,6 +105,46 @@ def add_random_url_to_db(original_url):
     return response
 
 
+def create_new_user(username, hashed_password):
+    """
+    # temp
+    :param username:
+    :param hashed_password:
+    :return response:
+    """
+    # Initialize response
+    response = {
+        "status_code": None,
+        "payload": ''
+    }
+
+    # Create key:value pair to add to DB
+    new_user = Users(
+        username=username,
+        hashed_password=hashed_password,
+        admin=False,
+        disabled=False,
+        url_limit=20
+    )
+
+    try:
+        # Create condition to make sure Short Url isn't already in DB
+        condition = Users.username.does_not_exist()
+
+        # Attempt to add item to DB
+        new_user.save(condition=condition)
+
+    except:
+        # temp
+        pass
+
+    else:
+        response["status_code"] = 200
+        response["payload"] = "User successfully created"
+
+    return response
+
+
 def delete_item(short_url):
     """
     Function attempts to delete an existing key (short_url) in the database.
@@ -146,7 +186,7 @@ def get_all_urls():
 
     try:
         # Get all urls in DB
-        all_url_items = Thread.scan()
+        all_url_items = Urls.scan()
 
     except PynamoDBConnectionError:
         # Internal Server Error, unreachable server
@@ -187,7 +227,7 @@ def get_one_url(short_url):
 
     try:
         # Get url key pair in DB
-        url_item = Thread.get(short_url)
+        url_item = Urls.get(short_url)
 
     except TypeError:
         # Bad request, issue with getting item from DB

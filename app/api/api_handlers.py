@@ -8,7 +8,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from app.models.pydantic_models import PostURL, User, UserinDB, Token, TokenData
-from app.service.database import add_custom_url_to_db, add_random_url_to_db, get_all_urls, get_one_url
+from app.service.database import add_custom_url_to_db, add_random_url_to_db, create_new_user, get_all_urls, get_one_url
 
 # Temporary return messages
 SUCCESS_MESSAGE = "Process successful!"
@@ -124,6 +124,34 @@ async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
     return current_user
+
+
+@router.post("/create_user")
+async def create_user(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+    username = form_data.username
+    exisiting_user = get_user(fake_users_db, username)
+    if exisiting_user:
+        return {"temp_message": "This username already exists"}
+
+    hashed_password = get_password_hash(form_data.password)
+
+    response = create_new_user(username, hashed_password)
+
+    if response["status_code"] == 200:
+        response["message"] = f"User '{username}' created successfully."
+    else:
+        response["message"] = f"Error occurred, user '{username}' not created."
+
+    return response
+
+
+
+
+
+
+
+
+
 
 
 @router.post("/shorten_url")
