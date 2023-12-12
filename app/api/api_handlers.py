@@ -2,13 +2,12 @@ from typing import Annotated
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from pydantic import BaseModel
 
 from fastapi import APIRouter, Path, Body, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-from app.models.pydantic_models import PostURL, User, UserinDB
+from app.models.pydantic_models import PostURL, User, UserinDB, Token, TokenData
 from app.service.database import add_custom_url_to_db, add_random_url_to_db, get_all_urls, get_one_url
 
 # Temporary return messages
@@ -35,13 +34,9 @@ fake_users_db = {
     }
 }
 
-
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-app = FastAPI()
 
 
 def verify_password(plain_password, hashed_password):
@@ -72,7 +67,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.utcnow() + timedelta(minutes=30)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -106,7 +101,7 @@ async def get_current_active_user(
     return current_user
 
 
-@app.post("/token", response_model=Token)
+@router.post("/token", response_model=Token)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ):
@@ -124,18 +119,11 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.get("/users/me/", response_model=User)
+@router.get("/users/me/", response_model=User)
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
     return current_user
-
-
-@app.get("/users/me/items/")
-async def read_own_items(
-    current_user: Annotated[User, Depends(get_current_active_user)]
-):
-    return [{"item_id": "Foo", "owner": current_user.username}]
 
 
 @router.post("/shorten_url")
