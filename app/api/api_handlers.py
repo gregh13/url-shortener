@@ -3,11 +3,11 @@ from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-from fastapi import APIRouter, Path, Body, Depends, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-from app.models.pydantic_models import PostURL, User, UserinDB, Token, TokenData
+from app.models.pydantic_models import PostURL, User, UserInDB, Token, TokenData
 from app.service.database import add_custom_url_to_db, add_random_url_to_db, create_new_user, get_all_urls, get_one_url
 
 # Temporary return messages
@@ -15,7 +15,7 @@ SUCCESS_MESSAGE = "Process successful!"
 ERROR_MESSAGE = "Sorry, we could not process your request."
 
 router = APIRouter(prefix="/api", tags=["url_actions"])
-
+auth_router = APIRouter(prefix="/users", tags=["user_actions"])
 
 # to get a string like this run:
 # openssl rand -hex 32
@@ -101,7 +101,7 @@ async def get_current_active_user(
     return current_user
 
 
-@router.post("/token", response_model=Token)
+@auth_router.post("/token", response_model=Token)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ):
@@ -119,18 +119,18 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/users/me/", response_model=User)
+@auth_router.get("/users/me/", response_model=User)
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
     return current_user
 
 
-@router.post("/create_user")
+@auth_router.post("/create_user")
 async def create_user(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     username = form_data.username
-    exisiting_user = get_user(fake_users_db, username)
-    if exisiting_user:
+    existing_user = get_user(fake_users_db, username)
+    if existing_user:
         return {"temp_message": "This username already exists"}
 
     hashed_password = get_password_hash(form_data.password)
@@ -145,14 +145,7 @@ async def create_user(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
     return response
 
 
-
-
-
-
-
-
-
-
+# -----------------------------------------------------------------------------------
 
 @router.post("/shorten_url")
 async def shorten_url(record: Annotated[PostURL, Body(title="Pydantic Model for URL")]):
@@ -185,7 +178,7 @@ async def list_urls():
 
 
 @router.get("/redirect/{short_url}")
-async def redirect(short_url: Annotated[str, Path(title="Short URL")] = None):
+async def redirect(short_url: Annotated[str, 'short_url to be used for redirection'] = None):
     if not short_url:
         return {"status_code": 400, "payload": "Bad Input"}
 
