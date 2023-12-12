@@ -1,14 +1,14 @@
 from typing import Annotated
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from app.models.pydantic_models import PostURL, User, UserInDB, Token, TokenData
-from app.service.database import add_custom_url_to_db, add_random_url_to_db, create_new_user, get_all_urls, get_one_url
+import app.service.database as service
+
 
 # Temporary return messages
 SUCCESS_MESSAGE = "Process successful!"
@@ -34,32 +34,7 @@ fake_users_db = {
     }
 }
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
-
-def get_user(db, username: str):
-    if username in db:
-        user_dict = db[username]
-        return UserInDB(**user_dict)
-
-
-def authenticate_user(fake_db, username: str, password: str):
-    user = get_user(fake_db, username)
-    if not user:
-        return False
-    if not verify_password(password, user.hashed_password):
-        return False
-    return user
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/token")
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
@@ -87,7 +62,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = get_user(fake_users_db, username=token_data.username)
+    user = service.get_user(fake_users_db, username=token_data.username)
     if user is None:
         raise credentials_exception
     return user
@@ -105,7 +80,7 @@ async def get_current_active_user(
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ):
-    user = authenticate_user(fake_users_db, form_data.username, form_data.password)
+    user = service.authenticate_user(fake_users_db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -129,13 +104,11 @@ async def read_users_me(
 @auth_router.post("/create_user")
 async def create_user(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     username = form_data.username
-    existing_user = get_user(fake_users_db, username)
+    existing_user = service.get_user(fake_users_db, username)
     if existing_user:
         return {"temp_message": "This username already exists"}
 
-    hashed_password = get_password_hash(form_data.password)
-
-    response = create_new_user(username, hashed_password)
+    response = service.create_new_user(username, form_data.password)
 
     if response["status_code"] == 200:
         response["message"] = f"User '{username}' created successfully."
@@ -151,11 +124,11 @@ async def create_user(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 async def shorten_url(record: Annotated[PostURL, Body(title="Pydantic Model for URL")]):
     if record.custom_url:
         # Custom url provided, attempt to add custom url to DB
-        response = add_custom_url_to_db(custom_url=record.custom_url, original_url=record.original_url)
+        response = service.add_custom_url_to_db(custom_url=record.custom_url, original_url=record.original_url)
 
     else:
         # No custom url provided, attempt to add randomly generated short url to DB
-        response = add_random_url_to_db(original_url=record.original_url)
+        response = service.add_random_url_to_db(original_url=record.original_url)
 
     if response["status_code"] == 200:
         response["message"] = SUCCESS_MESSAGE
@@ -167,7 +140,7 @@ async def shorten_url(record: Annotated[PostURL, Body(title="Pydantic Model for 
 
 @router.get("/list_urls")
 async def list_urls():
-    response = get_all_urls()
+    response = service.get_all_urls()
 
     if response["status_code"] == 200:
         response["message"] = SUCCESS_MESSAGE
@@ -183,7 +156,7 @@ async def redirect(short_url: Annotated[str, 'short_url to be used for redirecti
         return {"status_code": 400, "payload": "Bad Input"}
 
     # Check DB for short_url key
-    response = get_one_url(short_url)
+    response = service.get_one_url(short_url)
 
     if response["status_code"] == 200:
         response["message"] = SUCCESS_MESSAGE
