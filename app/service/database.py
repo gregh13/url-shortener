@@ -1,6 +1,7 @@
 from app.models.pynamo_models import Urls, Users
 from app.models.pydantic_models import User
 from pynamodb.exceptions import AttributeNullError, DeleteError, DoesNotExist, PutError, PynamoDBConnectionError
+from pynamodb.expressions.condition import size
 from uuid import uuid4
 from passlib.context import CryptContext
 
@@ -503,4 +504,28 @@ def reset_users():
 
     return response
 
-reset_users()
+
+def update_user_url_limit(username, new_limit):
+    response = {
+        "status_code": None,
+        "payload": ''
+    }
+
+    user_response = get_pynamodb_user(username)
+    user = user_response["user"]
+
+    try:
+        user.update(
+            condition=(size(Users.user_urls) <= new_limit),
+            actions=[Users.url_limit.set(new_limit)]
+        )
+
+    except:
+        response["status_code"] = 400
+        response["payload"] = "Error: Url limit not updated"
+
+    else:
+        response["status_code"] = 200
+        response["payload"] = f"Success: Url limit for user '{username}' has been set to {new_limit}."
+
+    return response

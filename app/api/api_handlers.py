@@ -142,6 +142,29 @@ async def list_all_users(current_user: Annotated[User, Depends(get_current_user)
     return response
 
 
+@auth_router.post("/update_url_limit")
+async def update_url_limit(
+        username: Annotated[str, "username of user to change url limit for"],
+        new_limit: Annotated[int, "new url limit"],
+        current_user: Annotated[User, Depends(get_current_user)]
+):
+
+    if not service.is_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    response = service.update_user_url_limit(username, new_limit)
+
+    return response
+
+
+
+
+
+
 # -----------------------------------------------------------------------------------
 
 @router.post("/shorten_url")
