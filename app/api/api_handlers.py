@@ -142,11 +142,9 @@ async def update_url_limit(
         is_admin: Annotated[bool, Depends(is_admin_user)]
 ):
 
-    if not is_admin:
+    if is_admin:
         response = service.update_user_url_limit(username, new_limit)
         return response
-
-
 
 
 
@@ -182,6 +180,11 @@ async def list_urls(is_admin: Annotated[bool, Depends(is_admin_user)]):
             response["message"] = ERROR_MESSAGE + f" Error code: {response['status_code']} - {response['payload']}"
 
         return response
+
+
+@router.get("/list_my_urls")
+async def list_my_urls(current_user: Annotated[User, Depends(get_current_user)]):
+    return current_user.user_urls
 
 
 @router.get("/redirect/{short_url}")
