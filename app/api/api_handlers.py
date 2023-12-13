@@ -58,6 +58,15 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     return user
 
 
+async def is_admin_user(current_user: Annotated[User, Depends(get_current_user)]):
+    if not current_user.admin:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return True
+
 @auth_router.post("/token", response_model=Token)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
@@ -120,35 +129,22 @@ async def change_password(
 
 
 @auth_router.get("/list_all_users")
-async def list_all_users(current_user: Annotated[User, Depends(get_current_user)]):
-    if not service.is_admin(current_user):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Unauthorized",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    response = service.get_all_pynamodb_users()
-    return response
+async def list_all_users(is_admin: Annotated[bool, Depends(is_admin_user)]):
+    if is_admin:
+        response = service.get_all_pynamodb_users()
+        return response
 
 
 @auth_router.post("/update_url_limit")
 async def update_url_limit(
         username: Annotated[str, "username of user to change url limit for"],
         new_limit: Annotated[int, "new url limit"],
-        current_user: Annotated[User, Depends(get_current_user)]
+        is_admin: Annotated[bool, Depends(is_admin_user)]
 ):
 
-    if not service.is_admin(current_user):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Unauthorized",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    response = service.update_user_url_limit(username, new_limit)
-
-    return response
+    if not is_admin:
+        response = service.update_user_url_limit(username, new_limit)
+        return response
 
 
 
