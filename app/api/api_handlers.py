@@ -172,15 +172,16 @@ async def shorten_url(record: Annotated[PostURL, Body(title="Pydantic Model for 
 
 
 @router.get("/list_urls")
-async def list_urls():
-    response = service.get_all_urls()
+async def list_urls(is_admin: Annotated[bool, Depends(is_admin_user)]):
+    if is_admin:
+        response = service.get_all_urls()
 
-    if response["status_code"] == 200:
-        response["message"] = SUCCESS_MESSAGE
-    else:
-        response["message"] = ERROR_MESSAGE + f" Error code: {response['status_code']} - {response['payload']}"
+        if response["status_code"] == 200:
+            response["message"] = SUCCESS_MESSAGE
+        else:
+            response["message"] = ERROR_MESSAGE + f" Error code: {response['status_code']} - {response['payload']}"
 
-    return response
+        return response
 
 
 @router.get("/redirect/{short_url}")
