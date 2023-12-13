@@ -62,25 +62,17 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = service.get_user(fake_users_db, username=token_data.username)
+    user = service.get_user(username=token_data.username)
     if user is None:
         raise credentials_exception
     return user
-
-
-async def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)]
-):
-    if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
 
 
 @auth_router.post("/token", response_model=Token)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ):
-    user = service.authenticate_user(fake_users_db, form_data.username, form_data.password)
+    user = service.authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -94,9 +86,9 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@auth_router.get("/users/me/", response_model=User)
-async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_active_user)]
+@auth_router.get("/me/", response_model=User)
+async def show_current_user(
+    current_user: Annotated[User, Depends(get_current_user)]
 ):
     return current_user
 
@@ -116,6 +108,39 @@ async def create_user(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
         response["message"] = f"Error occurred, user '{username}' not created."
 
     return response
+
+
+@auth_router.post("/change_password/")
+async def change_password(
+    old_password: Annotated[str, "User's previous password"],
+    new_password: Annotated[str, "User's new password"],
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    response = service.change_password(old_password, new_password, current_user)
+
+    return response
+
+
+@auth_router.get("/list_all_users")
+async def list_all_users(current_user: Annotated[User, Depends(get_current_user)]):
+    if not service.is_admin(current_user):
+        pass
+    response = service.get_all_pynamodb_users()
+    return response
+
+
+
+@auth_router.get("/list_all_users")
+async def list_all_users():
+    pass
 
 
 # -----------------------------------------------------------------------------------

@@ -33,5 +33,4 @@ class Users(Model):
     username = UnicodeAttribute(hash_key=True, attr_name="Username")
     url_limit = UnicodeAttribute(attr_name="UrlLimit")
     admin = UnicodeAttribute(attr_name="Admin")
-    disabled = UnicodeAttribute(attr_name="Disabled")
     hashed_password = UnicodeAttribute(attr_name="HashedPassword")

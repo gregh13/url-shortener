@@ -8,9 +8,9 @@ class PostURL(BaseModel):
 
 class User(BaseModel):
     username: str
+    hashed_password: str
     url_limit: int | None = 20
     admin: bool | None = False
-    disabled: bool | None = False
 
 
 class Token(BaseModel):
@@ -20,7 +20,3 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: str | None = None
-
-
-class UserInDB(User):
-    hashed_password: str

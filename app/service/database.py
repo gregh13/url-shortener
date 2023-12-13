@@ -1,5 +1,5 @@
 from app.models.pynamo_models import Urls, Users
-from app.models.pydantic_models import UserInDB
+from app.models.pydantic_models import User
 from pynamodb.exceptions import AttributeNullError, DeleteError, DoesNotExist, PutError, PynamoDBConnectionError
 from uuid import uuid4
 from passlib.context import CryptContext
@@ -10,6 +10,17 @@ MAX_RANDOM_URL_ATTEMPTS = 50
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
+def pynamo_user_to_pydantic_user(user_pynamo: Users) -> User:
+    user = User(
+        username=user_pynamo.username,
+        url_limit=user_pynamo.url_limit,
+        admin=user_pynamo.admin,
+        hashed_password=user_pynamo.hashed_password
+    )
+
+    return user
+
+
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -18,20 +29,26 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def get_user(db, username: str):
-    if username in db:
-        user_dict = db[username]
-        return UserInDB(**user_dict)
+def get_user(username: str):
+    response = get_pynamodb_user(username)
+    user_pynamo = response["user"]
+
+    if user_pynamo:
+        user = pynamo_user_to_pydantic_user(user_pynamo)
+        return user
 
 
-def authenticate_user(fake_db, username: str, password: str):
-    user = get_user(fake_db, username)
+def authenticate_user(username: str, password: str):
+    user = get_user(username)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
         return False
     return user
 
+
+def is_admin(user: User):
+    return user.admin
 
 # -----------------------------------------------------------
 
@@ -134,11 +151,48 @@ def add_random_url_to_db(original_url):
     return response
 
 
-def create_new_user(username, password):
+def change_password(old_password, new_password, current_user):
+    response = {
+        "status_code": None,
+        "payload": ''
+    }
+
+    if old_password == new_password:
+        response["status_code"] = 400
+        response["payload"] = "Error: Old and new passwords are the same"
+
+    elif not verify_password(old_password, current_user.hashed_password):
+        response["status_code"] = 400
+        response["payload"] = "Error: Old password doesn't match user password"
+
+    else:
+        try:
+            user_response = get_pynamodb_user(current_user.username)
+            user = user_response["user"]
+
+            hashed_new_password = get_password_hash(new_password)
+            update_response = user.update(actions=[Users.hashed_password.set(hashed_new_password)])
+            print(update_response)
+
+        except:
+            response["status_code"] = 500
+            response["payload"] = "TEMPORARY EXCEPTION RESPONSE, NOT SUCCESSFUL"
+
+        else:
+            response["status_code"] = 200
+            response["payload"] = "Successfully changed password"
+
+    return response
+
+
+def create_new_user(username: str, password: str, admin: bool = False, url_limit: int = 20):
     """
     # temp
+
     :param username:
     :param password:
+    :param admin:
+    :param url_limit:
     :return response:
     """
     # Initialize response
@@ -153,9 +207,8 @@ def create_new_user(username, password):
     new_user = Users(
         username=username,
         hashed_password=hashed_password,
-        admin=False,
-        disabled=False,
-        url_limit=20
+        admin=admin,
+        url_limit=url_limit
     )
 
     try:
@@ -210,12 +263,12 @@ def delete_user(username):
     Response, which includes payload and status_code, is returned to provide client with details of the API call.
     """
     # Need to get actual item in order to delete item
-    response = get_one_user(username=username)
+    response = get_pynamodb_user(username=username)
 
     if response["status_code"] == 200:
         # user retrieved, can now try to delete
         try:
-            user_to_delete = response["payload"]
+            user_to_delete = response["user"]
             user_to_delete.delete()
 
         except DeleteError:
@@ -231,14 +284,13 @@ def delete_user(username):
     return response
 
 
-def get_all_users():
+def get_all_pynamodb_users():
     """
     Function attempts to retrieve all existing key:value pairs (short_url: original_url) in the database.
     Response, which includes payload and status_code, is returned to provide client with details of the API call.
     """
     # Initialize response
     response = {
-        "short_url": None,
         "status_code": None,
         "payload": ''
     }
@@ -265,7 +317,6 @@ def get_all_users():
                 "username": user.username,
                 "hashed_password": user.hashed_password,
                 "admin": user.admin,
-                "disabled": user.disabled,
                 "url_limit": user.url_limit
             }
 
@@ -275,7 +326,7 @@ def get_all_users():
     return response
 
 
-def get_one_user(username):
+def get_pynamodb_user(username):
     """
     Function attempts to retrieve a specific key:value pair (short_url: original_url) from the database.
     Response, including payload, status_code, & url_item, is returned to provide client with details of the API call.
@@ -284,6 +335,7 @@ def get_one_user(username):
     response = {
         "user": None,
         "status_code": None,
+        "username": None,
         "payload": ''
     }
 
@@ -308,8 +360,9 @@ def get_one_user(username):
 
     else:
         # Success, url retrieved
-        response["payload"] = user
-        response["short_url"] = username
+        response["user"] = user
+        response["username"] = username
+        response["payload"] = "Success"
         response["status_code"] = 200
 
     return response
@@ -423,7 +476,7 @@ def reset_users():
     """
 
     # Get all urls in DB
-    response = get_all_users()
+    response = get_all_pynamodb_users()
 
     if response["status_code"] == 200:
         # Remove all entries from DB
@@ -432,6 +485,6 @@ def reset_users():
             delete_user(username)
 
         # Repopulate with admin
-        response = create_new_user("gregh13", "123")
+        response = create_new_user("gregh13", "123", admin=True, url_limit=22)
 
     return response
