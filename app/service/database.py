@@ -13,9 +13,10 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def pynamo_user_to_pydantic_user(user_pynamo: Users) -> User:
     user = User(
         username=user_pynamo.username,
+        hashed_password=user_pynamo.hashed_password,
         url_limit=user_pynamo.url_limit,
-        admin=user_pynamo.admin,
-        hashed_password=user_pynamo.hashed_password
+        user_urls=user_pynamo.user_urls,
+        admin=user_pynamo.admin
     )
 
     return user
@@ -51,7 +52,6 @@ def is_admin(user: User):
     return user.admin
 
 # -----------------------------------------------------------
-
 def add_url_to_db(short_url, original_url):
     """
     Function that attempts to add a new key:value pair (short_url: original_url) to the DynamoDB database via PynamoDB.
@@ -185,14 +185,16 @@ def change_password(old_password, new_password, current_user):
     return response
 
 
-def create_new_user(username: str, password: str, admin: bool = False, url_limit: int = 20):
+def create_new_user(username: str, password: str, url_limit: int = 20, user_urls: list[dict] = [], admin: bool = False):
     """
     # temp
 
     :param username:
     :param password:
-    :param admin:
     :param url_limit:
+    :param user_urls:
+    :param admin:
+
     :return response:
     """
     # Initialize response
@@ -207,8 +209,9 @@ def create_new_user(username: str, password: str, admin: bool = False, url_limit
     new_user = Users(
         username=username,
         hashed_password=hashed_password,
-        admin=admin,
-        url_limit=url_limit
+        url_limit=url_limit,
+        user_urls=user_urls,
+        admin=admin
     )
 
     try:
@@ -316,8 +319,9 @@ def get_all_pynamodb_users():
             user_dict = {
                 "username": user.username,
                 "hashed_password": user.hashed_password,
+                "url_limit": user.url_limit,
+                "user_urls": user.user_urls,
                 "admin": user.admin,
-                "url_limit": user.url_limit
             }
 
             # Add url to list
@@ -485,6 +489,18 @@ def reset_users():
             delete_user(username)
 
         # Repopulate with admin
-        response = create_new_user("gregh13", "123", admin=True, url_limit=22)
+        user_urls = {
+            "custom_url": "existing_url",
+            "original_url": "https://www.google.com"
+        }
+        response = create_new_user(
+            username="gregh13",
+            password="123",
+            url_limit=22,
+            user_urls=[user_urls],
+            admin=True
+        )
 
     return response
+
+reset_users()

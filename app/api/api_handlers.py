@@ -6,7 +6,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-from app.models.pydantic_models import PostURL, User, UserInDB, Token, TokenData
+from app.models.pydantic_models import PostURL, User, Token, TokenData
 import app.service.database as service
 
 
@@ -96,16 +96,16 @@ async def show_current_user(
 @auth_router.post("/create_user")
 async def create_user(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     username = form_data.username
-    existing_user = service.get_user(fake_users_db, username)
+    existing_user = service.get_user(username)
     if existing_user:
         return {"temp_message": "This username already exists"}
 
     response = service.create_new_user(username, form_data.password)
 
     if response["status_code"] == 200:
-        response["message"] = f"User '{username}' created successfully."
+        response["payload"] = f"User '{username}' created successfully."
     else:
-        response["message"] = f"Error occurred, user '{username}' not created."
+        response["payload"] = f"Error occurred, user '{username}' not created."
 
     return response
 
@@ -132,15 +132,14 @@ async def change_password(
 @auth_router.get("/list_all_users")
 async def list_all_users(current_user: Annotated[User, Depends(get_current_user)]):
     if not service.is_admin(current_user):
-        pass
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     response = service.get_all_pynamodb_users()
     return response
-
-
-
-@auth_router.get("/list_all_users")
-async def list_all_users():
-    pass
 
 
 # -----------------------------------------------------------------------------------

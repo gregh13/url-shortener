@@ -1,5 +1,5 @@
 from pynamodb.models import Model
-from pynamodb.attributes import UnicodeAttribute
+from pynamodb.attributes import UnicodeAttribute, ListAttribute
 
 
 class Urls(Model):
@@ -16,6 +16,7 @@ class Urls(Model):
 
     short_url = UnicodeAttribute(hash_key=True, attr_name="ShortUrl")
     original_url = UnicodeAttribute(attr_name="OriginalUrl")
+    username = UnicodeAttribute(attr_name="Username")
 
 
 class Users(Model):
@@ -31,6 +32,7 @@ class Users(Model):
         read_capacity_units = 5
 
     username = UnicodeAttribute(hash_key=True, attr_name="Username")
-    url_limit = UnicodeAttribute(attr_name="UrlLimit")
-    admin = UnicodeAttribute(attr_name="Admin")
     hashed_password = UnicodeAttribute(attr_name="HashedPassword")
+    url_limit = UnicodeAttribute(attr_name="UrlLimit")
+    user_urls = ListAttribute(attr_name="UserUrls")
+    admin = UnicodeAttribute(attr_name="Admin")

@@ -10,6 +10,7 @@ class User(BaseModel):
     username: str
     hashed_password: str
     url_limit: int | None = 20
+    user_urls: list[dict] | None = []
     admin: bool | None = False
 
 
