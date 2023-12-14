@@ -152,14 +152,24 @@ async def update_url_limit(
 # -----------------------------------------------------------------------------------
 
 @router.post("/shorten_url")
-async def shorten_url(record: Annotated[PostURL, Body(title="Pydantic Model for URL")]):
+async def shorten_url(
+        record: Annotated[PostURL, Body(title="Pydantic Model for URL")],
+        current_user: Annotated[User, Depends(get_current_user)]
+):
+    if current_user.url_limit == len(current_user.user_urls):
+        return "Url limit reached, failed to add new item"
+
     if record.custom_url:
         # Custom url provided, attempt to add custom url to DB
-        response = service.add_custom_url_to_db(custom_url=record.custom_url, original_url=record.original_url)
+        response = service.add_custom_url_to_db(
+            custom_url=record.custom_url,
+            original_url=record.original_url,
+            username=current_user.username
+        )
 
     else:
         # No custom url provided, attempt to add randomly generated short url to DB
-        response = service.add_random_url_to_db(original_url=record.original_url)
+        response = service.add_random_url_to_db(original_url=record.original_url, username=current_user.username)
 
     if response["status_code"] == 200:
         response["message"] = SUCCESS_MESSAGE
