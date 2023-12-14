@@ -53,12 +53,11 @@ def is_admin(user: User):
     return user.admin
 
 # -----------------------------------------------------------
-def add_url_to_db(short_url, original_url):
+def add_url_to_db(short_url: str, original_url: str, username: str):
     """
     Function that attempts to add a new key:value pair (short_url: original_url) to the DynamoDB database via PynamoDB.
     Response, which includes payload and status_code, is returned to provide client with details of the API call.
     """
-
     # Initialize response
     response = {
         "short_url": None,
@@ -67,7 +66,7 @@ def add_url_to_db(short_url, original_url):
     }
 
     # Create key:value pair to add to DB
-    new_item = Urls(short_url=short_url, original_url=original_url)
+    new_item = Urls(short_url=short_url, original_url=original_url, username=username)
 
     try:
         # Create condition to make sure Short Url isn't already in DB
@@ -102,19 +101,26 @@ def add_url_to_db(short_url, original_url):
         response["payload"] = "Success"
         response["status_code"] = 200
 
+        # Add url to user's list
+        url_dict = {"short_url": short_url, "original_url": original_url}
+
+        user_response = get_pynamodb_user(username)
+        user = user_response["user"]
+        update_response = user.update(actions=[Users.user_urls.set(Users.user_urls.append([url_dict]))])
+        print(update_response)
     return response
 
 
-def add_custom_url_to_db(custom_url, original_url):
+def add_custom_url_to_db(custom_url: str, original_url: str, username: str):
     """
     Function attempts to add a new key:value pair (short_url: original_url) with custom key value.
     Response, which includes payload and status_code, is returned to provide client with details of the API call.
     """
     # Call url adding function with custom_url parameter
-    return add_url_to_db(short_url=custom_url, original_url=original_url)
+    return add_url_to_db(short_url=custom_url, original_url=original_url, username=username)
 
 
-def add_random_url_to_db(original_url):
+def add_random_url_to_db(original_url: str, username: str):
     """
     Function attempts to add a new key:value pair (short_url: original_url) using a randomly generated string as key.
     Response, which includes payload and status_code, is returned to provide client with details of the API call.
@@ -138,7 +144,7 @@ def add_random_url_to_db(original_url):
         random_short_url = str(random_full_url)[:SHORT_URL_LENGTH]
 
         # Try to add url to DB
-        response = add_url_to_db(short_url=random_short_url, original_url=original_url)
+        response = add_url_to_db(short_url=random_short_url, original_url=original_url, username=username)
 
         # Check if url was successfully added to DB
         if response["status_code"] == 200:
@@ -404,7 +410,8 @@ def get_all_urls():
         for url_item in all_url_items:
             url = {
                 "short_url": url_item.short_url,
-                "original_url": url_item.original_url
+                "original_url": url_item.original_url,
+                "username": url_item.username
             }
 
             # Add url to list
@@ -468,8 +475,7 @@ def reset_db():
             short_url = url["short_url"]
             delete_item(short_url)
 
-        # Repopulate with existing url
-        response = add_custom_url_to_db(custom_url="existing_url", original_url="https://www.google.com")
+        reset_users()
 
     return response
 
@@ -490,16 +496,19 @@ def reset_users():
             delete_user(username)
 
         # Repopulate with admin
-        user_urls = {
-            "custom_url": "existing_url",
-            "original_url": "https://www.google.com"
-        }
+        default_username = "gregh13"
         response = create_new_user(
-            username="gregh13",
+            username=default_username,
             password="123",
             url_limit=22,
-            user_urls=[user_urls],
+            user_urls=[],
             admin=True
+        )
+
+        add_custom_url_to_db(
+            custom_url="existing_url",
+            original_url="https://www.google.com",
+            username=default_username
         )
 
     return response
@@ -515,8 +524,9 @@ def update_user_url_limit(username, new_limit):
     user = user_response["user"]
 
     try:
+        condition = size(Users.user_urls) <= new_limit
         user.update(
-            condition=(size(Users.user_urls) <= new_limit),
+            condition=condition,
             actions=[Users.url_limit.set(new_limit)]
         )
 
@@ -529,3 +539,4 @@ def update_user_url_limit(username, new_limit):
         response["payload"] = f"Success: Url limit for user '{username}' has been set to {new_limit}."
 
     return response
+
